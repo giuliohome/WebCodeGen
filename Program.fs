@@ -190,10 +190,20 @@ let ErasingTP2RecBegin = @"alerts
     Outcome         = alert.Outcome;
 "
 let ErasingTP2RecEnd = @"}"
-let produceTP2RecField(sw:StreamWriter) (i:int) (line: CsvType) =
+let produceTP2RecField (sw:StreamWriter) (i:int) (line: CsvType) =
     sw.WriteLine ("    " + line.Name + " = alert." + line.Name + ";")
 let produceTP2Rec () =
     produceCode ErasingTP2RecPath produceTP2RecField ErasingTP2RecBegin ErasingTP2RecEnd
+
+////F# Record Type to erasing Type Provider
+let Rec2ErasingTPpath = outFolder + "Rec2TP.fs"
+let Rec2ErasingTPBegin = @"let insertMe = alertLTExceed.Create()
+"
+let Rec2ErasingTPEnd = "//insertMe. <- DateTime.UtcNow"
+let produceRec2ErasingTPField (sw:StreamWriter) (i:int) (line: CsvType) =
+    sw.WriteLine ("insertMe." + line.Name + " <- alert." + line.Name)
+let produceRec2ErasingTP () =
+    produceCode Rec2ErasingTPpath produceRec2ErasingTPField Rec2ErasingTPBegin Rec2ErasingTPEnd
 
 [<EntryPoint>]
 let main argv =
@@ -203,4 +213,5 @@ let main argv =
     produceTrSingleLine ()
     produceTable ()
     produceTP2Rec ()
+    produceRec2ErasingTP ()
     0 // return an integer exit code
