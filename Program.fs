@@ -153,9 +153,8 @@ let TableBegin = @"
 	Status              VARCHAR (32) NOT NULL,"
 let TableEnd = @"
 	Message             NVARCHAR (max) NULL,
-	AssignedTo          VARCHAR (32) NULL,
-	Note                NVARCHAR (max) NULL,
-	Outcome             NVARCHAR (max) NULL,
+	AssignedTo          VARCHAR (32) NOT NULL,
+	Outcome             NVARCHAR (max) NOT NULL,
 	
 	CONSTRAINT PK_LTAlert PRIMARY KEY (AlertCode, BookCompany, AlertKey)
 	)"
@@ -171,12 +170,30 @@ let produceTableField (sw:StreamWriter) (i:int) (line: CsvType) =
          "	" + line.Name + " DATETIME NULL,"   
     | "DateTime" ->
          "	" + line.Name + " DATETIME NOT NULL,"
-    | _ -> // "string"
-         "	" + line.Name + " VARCHAR (128) NULL,"
+    | "string" -> // "string"
+         "	" + line.Name + " VARCHAR (128) NOT NULL,"
+    | unknow -> failwith "unknown column type: " + unknow
     )
 let produceTable () =
     produceCode TablePath produceTableField TableBegin TableEnd
 
+//Erasing Type Provider to F# Record Type
+let ErasingTP2RecPath = outFolder + "TP2Rec.fs"
+let ErasingTP2RecBegin = @"alerts
+|> Seq.map (fun alert -> {
+    AlertCode       = alert.AlertCode;
+    AlertEntity     = alert.AlertEntity;
+    AlertKey        = alert.AlertKey;
+    Status          = alert.Status;
+    AssignedTo      = alert.AssignedTo;
+    BookCompany     = alert.BookCompany;
+    Outcome         = alert.Outcome;
+"
+let ErasingTP2RecEnd = @"}"
+let produceTP2RecField(sw:StreamWriter) (i:int) (line: CsvType) =
+    sw.WriteLine ("    " + line.Name + " = alert." + line.Name + ";")
+let produceTP2Rec () =
+    produceCode ErasingTP2RecPath produceTP2RecField ErasingTP2RecBegin ErasingTP2RecEnd
 
 [<EntryPoint>]
 let main argv =
@@ -185,4 +202,5 @@ let main argv =
     produceShowHeader ()
     produceTrSingleLine ()
     produceTable ()
+    produceTP2Rec ()
     0 // return an integer exit code
