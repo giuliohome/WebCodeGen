@@ -122,7 +122,7 @@ let ClientTrSingleLinePath =  outFolder + "ClientTrSingleLine.fs"
 let ClientTrSingleLineBegin = @"
         tr [] ["
 let ClientTrSingleLineEnd = "        ]"
-let produceTrSingleLineField(sw:StreamWriter) (i:int) (line: CsvType) =
+let produceTrSingleLineField (sw:StreamWriter) (i:int) (line: CsvType) =
    sw.WriteLine 
     (
     match line.Field with
@@ -143,10 +143,46 @@ let produceTrSingleLine () =
     produceCode 
         ClientTrSingleLinePath produceTrSingleLineField ClientTrSingleLineBegin ClientTrSingleLineEnd
 
+let TablePath = outFolder + "Table.sql"
+let TableBegin = @"
+(
+	AlertCode           VARCHAR (32) NOT NULL,
+	BookCompany         VARCHAR (64) NOT NULL,
+	AlertKey            VARCHAR (64) NOT NULL,
+	AlertEntity         VARCHAR (32) NOT NULL,
+	Status              VARCHAR (32) NOT NULL,"
+let TableEnd = @"
+	Message             NVARCHAR (max) NULL,
+	AssignedTo          VARCHAR (32) NULL,
+	Note                NVARCHAR (max) NULL,
+	Outcome             NVARCHAR (max) NULL,
+	
+	CONSTRAINT PK_LTAlert PRIMARY KEY (AlertCode, BookCompany, AlertKey)
+	)"
+let produceTableField (sw:StreamWriter) (i:int) (line: CsvType) =
+   sw.WriteLine 
+    (
+    match line.Field with
+    | "decimal option" ->
+        "	" + line.Name + " DECIMAL (19, 4) NULL,"
+    | "decimal" ->
+         "	" + line.Name + " DECIMAL (19, 4) NOT NULL,"
+    | "DateTime option" ->
+         "	" + line.Name + " DATETIME NULL,"   
+    | "DateTime" ->
+         "	" + line.Name + " DATETIME NOT NULL,"
+    | _ -> // "string"
+         "	" + line.Name + " VARCHAR (128) NULL,"
+    )
+let produceTable () =
+    produceCode TablePath produceTableField TableBegin TableEnd
+
+
 [<EntryPoint>]
 let main argv =
     produceDbModel ()
     produceModelmapLT ()
     produceShowHeader ()
     produceTrSingleLine ()
+    produceTable ()
     0 // return an integer exit code
