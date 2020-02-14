@@ -133,7 +133,7 @@ let produceTrSingleLineField (sw:StreamWriter) (i:int) (line: CsvType) =
     | "decimal option" ->
         "          opt2tr (line." + line.Name + " |> Option.map string) "
     | "DateTime option" ->
-        "          date2re line." + line.Name
+        "          date2tr line." + line.Name
     | "DateTime" ->
         "          str2tr <| line." + line.Name + ".ToShortDateString()"
     | _ ->
